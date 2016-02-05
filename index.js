@@ -1,77 +1,42 @@
-var Jpeg = require('libjpeg').Jpeg;
-var fs = require('fs');
+var Readable = require('stream').Readable;
+var v4l2 = require('./v4l2');
 
-var binding = require('bindings')('capture.node');
-var path = require('path');
-
-function OSXCamera () {
+function Camera(devPath) {
+  this.device = new v4l2.Camera(devPath || "/dev/video0");
+  this.device.start();
 }
 
-OSXCamera.prototype.captureShot = function () {
-  var out = new (require('stream').Readable);
-  out._read = function () { };
-  setImmediate(function () {
-    var buf = binding.capture();
-    out.push(buf);
-    out.push(null);
-  });
-  return out;
-}
-
-OSXCamera.prototype.close = function () {
-}
-
-function LinuxCamera () {
-  var v4l2camera = require('./v4l2');
-  this.cam = new v4l2camera.Camera("/dev/video0");
-  this.cam.start();
-}
-
-LinuxCamera.prototype.captureShot = function (next) {
-  var out = new (require('stream').Readable);
+Camera.prototype.captureShot = function() {
+  var out = new Readable();
   out._read = function () { };
 
-  this.cam.capture(function () {
-    var width = this.cam.width;
-    var height = this.cam.height;
-    console.error('Result', width, height);
+  this.device.capture(function () {
+    var formatName = this.device.configGet().formatName;
 
-    switch (this.cam.configGet().formatName) {
+    switch (formatName) {
       case 'MJPG':
-        next(this.cam.toYUYV());
+        next(this.device.toYUYV());
         break;
 
       case 'YUYV':
-        var rgb = this.cam.toRGB();
-        var jpeg = new Jpeg(rgb, width, height, 'rgb');
-        console.error('Encoding');
-        jpeg.encode(function (image, error) {
-          console.error('Encoded');
-        });
+        next(this.device.toRGB());
         break;
 
       default:
-        throw new Error('Invalid format: ' + this.cam.configGet().formatName);
+        throw new Error('Invalid format: ' + formatName);
     }
 
-    function next (res) {
+    function next(res) {
       out.push(res);
       out.push(null);
     }
   }.bind(this));
+
   return out;
 }
 
-LinuxCamera.prototype.close = function () {
-  this.cam.stop();
+Camera.prototype.close = function () {
+  this.device.stop();
 }
 
-function acquireCamera (next) {
-  if (process.platform == 'darwin') {
-    next(null, new OSXCamera());
-  } else if (process.platform == 'linux') {
-    next(null, new LinuxCamera());
-  }
-}
-
-exports.acquireCamera = acquireCamera;
+module.exports = Camera;
