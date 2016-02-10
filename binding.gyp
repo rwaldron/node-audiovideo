@@ -10,13 +10,13 @@
           "OS=='mac'",
             {
               "sources": [
-                "src/capture_module.cc",
-                "src/capture.m"
+                "src/mac/capture_module.cc",
+                "src/mac/capture.m"
               ],
-              'xcode_settings': {
-                'OTHER_CFLAGS': [
-                  '-fobjc-arc',
-                  '-mmacosx-version-min=10.7',
+              "xcode_settings": {
+                "OTHER_CFLAGS": [
+                  "-fobjc-arc",
+                  "-mmacosx-version-min=10.7"
                 ],
               },
               "link_settings": {
@@ -33,12 +33,12 @@
         ],
         [
           "OS=='linux'", {
-            "sources": ["v4l2/capture.c", "v4l2/v4l2camera.cc"],
+            "sources": ["src/linux/capture.c", "src/linux/v4l2camera.cc"],
             "cflags": ["-Wall", "-Wextra", "-pedantic"],
             "xcode_settings": {
               "OTHER_CPLUSPLUSFLAGS": ["-std=c++11"],
             },
-            "cflags_c": ["-std=c11", "-Wno-unused-parameter"], 
+            "cflags_c": ["-std=c11", "-Wno-unused-parameter"],
             "cflags_cc": ["-std=c++11"]
           }
         ],

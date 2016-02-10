@@ -13,10 +13,16 @@ npm install audiovideo
 ```js
 var av = require('audiovideo');
 var fs = require('fs');
+var Camera = av.Camera;
 
-av.acquireCamera(function (err, camera) {
-	camera.captureShot('jpeg').pipe(fs.createWriteStream('out.jpg'));
+var camera = new Camera();
+var capture = camera.capture();
+
+capture.on('data', function(data) {
+  fs.writeFileSync('captures/captured-via-data-event.jpg', data);
 });
+
+capture.pipe(fs.createWriteStream('captures/captured-via-pipe.jpg'));
 ```
 
 ## License
