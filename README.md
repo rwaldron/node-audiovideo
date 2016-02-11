@@ -22,6 +22,8 @@ capture.on('data', function(data) {
   fs.writeFileSync('captures/captured-via-data-event.jpg', data);
 });
 
+// or...
+
 capture.pipe(fs.createWriteStream('captures/captured-via-pipe.jpg'));
 ```
 
